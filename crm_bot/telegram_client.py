@@ -81,13 +81,26 @@ def _main():
     relay_secret = config.telegram_relay_secret
 
     if args.command == "get-updates":
-        result = get_updates(token, args.offset, relay_url=relay_url, relay_secret=relay_secret)
+        if config.inbox_worksheet_name:
+            from crm_bot.mailbox import open_inbox_gateway, read_unprocessed_updates
+
+            gateway = open_inbox_gateway(config)
+            result = read_unprocessed_updates(gateway)
+        else:
+            result = get_updates(token, args.offset, relay_url=relay_url, relay_secret=relay_secret)
         print(json.dumps(result, ensure_ascii=False))
     elif args.command == "send":
         chat_id = resolve_chat_id(args.chat_id, config)
-        result = send_message(
-            token, chat_id, args.text, args.thread_id, relay_url=relay_url, relay_secret=relay_secret
-        )
+        if config.outbox_worksheet_name:
+            from crm_bot.mailbox import open_outbox_gateway, queue_outgoing_message
+
+            gateway = open_outbox_gateway(config)
+            queue_outgoing_message(gateway, chat_id, args.text, args.thread_id)
+            result = {"queued": True}
+        else:
+            result = send_message(
+                token, chat_id, args.text, args.thread_id, relay_url=relay_url, relay_secret=relay_secret
+            )
         print(json.dumps(result, ensure_ascii=False))
 
 

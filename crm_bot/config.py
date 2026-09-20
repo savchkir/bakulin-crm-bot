@@ -31,6 +31,8 @@ class Config:
     calendar_keywords: list
     telegram_relay_url: str = None
     telegram_relay_secret: str = None
+    inbox_worksheet_name: str = None
+    outbox_worksheet_name: str = None
 
 
 def load_config(path: str) -> Config:
@@ -44,4 +46,6 @@ def load_config(path: str) -> Config:
     fields = {field: raw[field] for field in REQUIRED_FIELDS}
     fields["telegram_relay_url"] = raw.get("telegram_relay_url")
     fields["telegram_relay_secret"] = raw.get("telegram_relay_secret")
+    fields["inbox_worksheet_name"] = raw.get("inbox_worksheet_name")
+    fields["outbox_worksheet_name"] = raw.get("outbox_worksheet_name")
     return Config(**fields)
