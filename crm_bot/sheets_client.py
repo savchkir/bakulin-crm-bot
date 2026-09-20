@@ -14,7 +14,7 @@ from crm_bot.sheets_schema import (
     RowLabelNotFound,
 )
 
-FIRST_LEAD_COLUMN = 3  # column A = labels, column B = example ("ПРИКЛАД"), C onward = real leads
+FIRST_LEAD_COLUMN = 2  # column A = labels, column B onward = real leads (no template/example column)
 
 
 class GspreadGateway:
@@ -28,7 +28,11 @@ class GspreadGateway:
         return self.worksheet.col_values(col)
 
     def last_used_column(self) -> int:
-        return len(self.worksheet.row_values(1))
+        # Row 1 is only a sheet title (content in column A only) — real lead data
+        # starts several rows down (row 4+), so we must scan every row's width,
+        # not just row 1, to find the true last used column.
+        all_values = self.worksheet.get_all_values()
+        return max((len(row) for row in all_values), default=1)
 
     def update_cell(self, row: int, col: int, value: str) -> None:
         self.worksheet.update_cell(row, col, value)
