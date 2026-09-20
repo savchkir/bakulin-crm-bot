@@ -8,18 +8,40 @@ from crm_bot.config import load_config
 API_BASE = "https://api.telegram.org"
 
 
-def get_updates(token: str, offset: int = None) -> list:
+def get_updates(token: str, offset: int = None, relay_url: str = None, relay_secret: str = None) -> list:
     params = {"timeout": 0}
     if offset is not None:
         params["offset"] = offset
+    if relay_url:
+        relay_payload = {
+            "secret": relay_secret,
+            "token": token,
+            "method": "getUpdates",
+            "httpMethod": "get",
+            "params": params,
+        }
+        response = requests.post(relay_url, json=relay_payload)
+        return response.json().get("result", [])
     response = requests.get(f"{API_BASE}/bot{token}/getUpdates", params=params)
     return response.json().get("result", [])
 
 
-def send_message(token: str, chat_id: int, text: str, thread_id: int = None) -> dict:
+def send_message(
+    token: str, chat_id: int, text: str, thread_id: int = None, relay_url: str = None, relay_secret: str = None
+) -> dict:
     payload = {"chat_id": chat_id, "text": text}
     if thread_id is not None:
         payload["message_thread_id"] = thread_id
+    if relay_url:
+        relay_payload = {
+            "secret": relay_secret,
+            "token": token,
+            "method": "sendMessage",
+            "httpMethod": "post",
+            "params": payload,
+        }
+        response = requests.post(relay_url, json=relay_payload)
+        return response.json().get("result", {})
     response = requests.post(f"{API_BASE}/bot{token}/sendMessage", json=payload)
     return response.json().get("result", {})
 
@@ -55,12 +77,18 @@ def _main():
     args = parser.parse_args()
     config = load_config(args.config)
     token = args.token or config.telegram_bot_token
+    relay_url = config.telegram_relay_url
+    relay_secret = config.telegram_relay_secret
 
     if args.command == "get-updates":
-        print(json.dumps(get_updates(token, args.offset), ensure_ascii=False))
+        result = get_updates(token, args.offset, relay_url=relay_url, relay_secret=relay_secret)
+        print(json.dumps(result, ensure_ascii=False))
     elif args.command == "send":
         chat_id = resolve_chat_id(args.chat_id, config)
-        print(json.dumps(send_message(token, chat_id, args.text, args.thread_id), ensure_ascii=False))
+        result = send_message(
+            token, chat_id, args.text, args.thread_id, relay_url=relay_url, relay_secret=relay_secret
+        )
+        print(json.dumps(result, ensure_ascii=False))
 
 
 if __name__ == "__main__":

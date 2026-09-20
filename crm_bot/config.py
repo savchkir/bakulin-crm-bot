@@ -29,6 +29,8 @@ class Config:
     reports_worksheet_name: str
     calendar_id: str
     calendar_keywords: list
+    telegram_relay_url: str = None
+    telegram_relay_secret: str = None
 
 
 def load_config(path: str) -> Config:
@@ -39,4 +41,7 @@ def load_config(path: str) -> Config:
     if missing:
         raise ConfigError(f"config.yaml is missing required field(s): {', '.join(missing)}")
 
-    return Config(**{field: raw[field] for field in REQUIRED_FIELDS})
+    fields = {field: raw[field] for field in REQUIRED_FIELDS}
+    fields["telegram_relay_url"] = raw.get("telegram_relay_url")
+    fields["telegram_relay_secret"] = raw.get("telegram_relay_secret")
+    return Config(**fields)

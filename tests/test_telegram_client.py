@@ -59,6 +59,48 @@ def test_send_message_omits_thread_id_when_not_given(mock_post):
     assert "message_thread_id" not in mock_post.call_args[1]["json"]
 
 
+@patch("crm_bot.telegram_client.requests.post")
+def test_get_updates_uses_relay_when_configured(mock_post):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"result": [{"update_id": 9}]}
+    mock_post.return_value = mock_response
+
+    updates = get_updates(
+        token="TOKEN", offset=3, relay_url="https://script.google.com/relay", relay_secret="s3cr3t"
+    )
+
+    called_url = mock_post.call_args[0][0]
+    sent_json = mock_post.call_args[1]["json"]
+    assert called_url == "https://script.google.com/relay"
+    assert sent_json["secret"] == "s3cr3t"
+    assert sent_json["token"] == "TOKEN"
+    assert sent_json["method"] == "getUpdates"
+    assert sent_json["params"]["offset"] == 3
+    assert updates == [{"update_id": 9}]
+
+
+@patch("crm_bot.telegram_client.requests.post")
+def test_send_message_uses_relay_when_configured(mock_post):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"result": {"message_id": 50}}
+    mock_post.return_value = mock_response
+
+    result = send_message(
+        token="TOKEN",
+        chat_id=111,
+        text="Привет",
+        relay_url="https://script.google.com/relay",
+        relay_secret="s3cr3t",
+    )
+
+    called_url = mock_post.call_args[0][0]
+    sent_json = mock_post.call_args[1]["json"]
+    assert called_url == "https://script.google.com/relay"
+    assert sent_json["method"] == "sendMessage"
+    assert sent_json["params"] == {"chat_id": 111, "text": "Привет"}
+    assert result == {"message_id": 50}
+
+
 class FakeConfig:
     kirill_chat_id = 111
     partners_group_chat_id = -222
