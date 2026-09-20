@@ -1,0 +1,16 @@
+# Copy this file to config.yaml and fill in real values. config.yaml is gitignored.
+telegram_bot_token: "123456:ABC-your-bot-token"
+kirill_chat_id: 000000000          # Kirill's personal Telegram chat id (for DM-only messages)
+partners_group_chat_id: -100000000 # the partners' group chat id (negative number for groups)
+
+google_service_account_json: "service_account.json"
+
+sheet_id: "1C82i3N9mXM9v8Hy3JDGE1Vjkeo5kMDHjo-XT8ILDBAk"
+sheet_worksheet_name: "Ліди"
+reports_worksheet_name: "Звіти"    # separate tab, created automatically if missing — the report archive
+
+calendar_id: "primary"             # or the specific calendar id that has the Bakulin call events
+calendar_keywords:
+  - "бакулин"
+  - "бакулін"
+  - "bakulin"
